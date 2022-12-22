@@ -11,7 +11,7 @@ public:
 
     static void start(Motor *left, Motor *right)
     {
-        Wire.begin(11);
+        Wire.begin(21);
         Wire.onReceive(handleReceive);
         Wire.onRequest(handleRequest);
         Serial.println("Com started");
