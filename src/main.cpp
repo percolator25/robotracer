@@ -3,6 +3,7 @@
 #include "Data.h"
 #include "Wifi.h"
 #include "Web.h"
+#include "Com.h"
 
 Motor left;
 Motor right;
@@ -72,6 +73,8 @@ void setup()
 
   left.init(1, D2, D1, false);
   right.init(2, D3, D4, true);
+
+  Com::start(&left, &right);
 
   Serial.println("Setup finished");
 
