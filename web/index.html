@@ -1,0 +1,224 @@
+<html>
+
+<head>
+
+    <title>outrunner-mctrl</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+
+    <style>
+        p {
+            margin-block: 0px;
+        }
+
+
+        html,
+        body,
+        .viewport {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+
+        header,
+        footer,
+        nav,
+        article,
+        aside {
+            margin: 1px;
+            background-color: #ccc;
+            display: flex;
+            text-align: center;
+            flex-direction: column;
+        }
+
+
+        /* items flex/expand vertically */
+        .vbox {
+            display: -webkit-flex;
+            display: -moz-flex;
+            display: -ms-flex;
+            display: flex;
+
+            -webkit-flex-direction: column;
+            -moz-flex-direction: column;
+            -ms-flex-direction: column;
+            flex-direction: column;
+
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+        }
+
+        /* items flex/expand horizontally */
+        .hbox {
+            display: -webkit-flex;
+            display: -moz-flex;
+            display: -ms-flex;
+            display: flex;
+
+            -webkit-flex-direction: row;
+            -moz-flex-direction: row;
+            -ms-flex-direction: row;
+            flex-direction: row;
+        }
+
+        .space-between {
+            -webkit-justify-content: space-between;
+            -moz-justify-content: space-between;
+            -ms-justify-content: space-between;
+            justify-content: space-between;
+        }
+
+
+        header,
+        footer {
+            height: 10vh;
+            background-color: #222;
+            color: white;
+        }
+
+        .main {
+            -webkit-flex: 1;
+            -moz-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+        }
+
+        .flex {
+            flex: 1;
+        }
+
+        .flex2 {
+            flex: 2;
+        }
+
+        .flex3 {
+            flex: 3;
+        }
+
+        .flex4 {
+            flex: 4;
+        }
+
+        .fixed {
+            flex: 0;
+        }
+
+        /* utils */
+        .right {
+            align-items: flex-end;
+        }
+
+        .alert-box {
+            background-color: red;
+        }
+
+        .pad {
+            padding: 10px;
+        }
+
+        button {
+            height: 30px
+        }
+    </style>
+
+    <script>
+        function register(who) {
+            document.getElementById(who).addEventListener("mouseup", function() {
+                send(who, "up")
+            })
+            document.getElementById(who).addEventListener("mousedown", function() {
+                send(who, "down")
+            })
+        }
+    </script>
+</head>
+
+<body class="vbox viewport">
+    <section class="main hbox space-between">
+        <article id="lf" class="flex">Left forward</article>
+        <article id="mt" class="flex">
+        <button  onclick="connect()">
+            Connect
+        </button>
+        <button  onclick="disconnect()">
+            Disconnect
+        </button>
+    </article>
+        <article id="rf" class="flex">Right forward</article>
+    </section>
+
+    <section class="main hbox space-between">
+        <article id="lb" class="flex">Left back</article>
+        <article id="status" class="flex"></article>
+        <article id="rb"  class="flex">Right back</article>
+    </section>
+
+    <script>
+        // Use the register function to register your own buttons. Press will always be "down", release is "up"
+        // The server will receive sth. like "lf: down"
+        // Please do NOT use colons
+        register("lf");
+        register("rf");
+
+        register("lb");
+        register("status");
+        register("rb");
+    </script>
+
+    <script>
+
+        function set_status(status) {
+            document.getElementById("status").innerHTML = "Status: " + status
+        }
+
+        let ws = null;
+
+        function connect() {
+
+            let host = window.location.host;
+            if (localStorage.getItem("host") != undefined) {
+                host = localStorage.getItem("host")
+            } else {
+                host = window.prompt("Please enter a IP adress", window.location.hostname);
+                localStorage.setItem("host", host)
+            }
+
+            //.test(window.location.hostname)
+            
+            ws = new WebSocket("ws://" + host + ":81")
+            ws.onopen = (event) => {
+                ws.send("hi");
+                set_status("Connected")
+            };
+            ws.onmessage = (event) => {
+                const parts = event.data.split(/:(.+)/) 
+                console.log(parts);
+                receive(parts[0], parts[1]);
+            }
+            
+        }
+
+        function disconnect() {
+            ws.close();
+            set_status("Disconnected")
+            localStorage.removeItem("host");
+        }
+
+        function send(where, what) {
+            if (ws !== undefined) {
+                console.log(">> " + where + ":" + what)
+                ws.send(where + ":" + what);
+            }
+        }
+
+        function receive(where, what) {
+            console.log("<< " + where + ":" + what)
+            document.getElementById(where).innerHTML = what;
+        }
+    </script>
+</body>
+
+</html>
