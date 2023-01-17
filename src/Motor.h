@@ -16,6 +16,7 @@ public:
     int get_mode();
     int get_stepps();
 
+    void awake();
     /**
      * @brief 0 = No movement; 1 = <Reservated>; 2 = Move specific; 3 = Move endlessly;
      *
@@ -26,6 +27,10 @@ private:
     uint16_t motor_index = 0;
     uint16_t motor_direction = 0;
     uint16_t motor_pin_steps = 0;
+
+    static int last_interaction;
+    static bool offline;
+
     bool lastStatus = LOW;
 
     int counter_intervall = 0;
@@ -40,6 +45,9 @@ private:
     bool initial_direction = true;
 };
 
+int Motor::last_interaction = 0;
+bool Motor::offline = false;
+
 void Motor::init(uint16_t index, uint16_t pinDirection, uint16_t pinSteps, bool initial_direction)
 {
     motor_index = index;
@@ -47,8 +55,11 @@ void Motor::init(uint16_t index, uint16_t pinDirection, uint16_t pinSteps, bool 
     motor_pin_steps = pinSteps;
     this->initial_direction = initial_direction;
 
+    pinMode(D0, OUTPUT);
     pinMode(motor_direction, OUTPUT);
     pinMode(motor_pin_steps, OUTPUT);
+
+    digitalWrite(D0, LOW);
 }
 
 void Motor::move_forwards(int target, uint16_t speed)
@@ -59,7 +70,6 @@ void Motor::move_forwards(int target, uint16_t speed)
 
 void Motor::move_forwards(uint16_t speed)
 {
-    Serial.println(speed);
     forward = initial_direction;
     move(speed);
 }
@@ -77,6 +87,13 @@ void Motor::move_backwards(uint16_t speed)
     move(speed);
 }
 
+void Motor::awake()
+{
+    digitalWrite(D0, HIGH);
+    offline = false;
+    last_interaction = millis();
+}
+
 /**
  * @brief Move the motor a specific time with a specific speed
  *
@@ -85,6 +102,8 @@ void Motor::move_backwards(uint16_t speed)
  */
 void Motor::move(int target, uint16_t speed)
 {
+
+    awake();
 
     Serial.print("Moving to target ");
     Serial.print(target);
@@ -117,6 +136,9 @@ void Motor::move(int target, uint16_t speed)
  */
 void Motor::move(uint16_t speed)
 {
+
+    awake();
+
     mode = 3;
     counter_intervall = 0;
     motor_speed = speed;
@@ -156,6 +178,23 @@ int Motor::get_position()
  */
 void Motor::tick()
 {
+
+    if (mode == 0)
+    {
+
+        if (millis() - last_interaction > 1000)
+        {
+            if (!offline)
+            {
+
+                digitalWrite(D0, LOW);
+                offline = true;
+                Serial.print("Motor is == ");
+                Serial.println(offline);
+            }
+        }
+    }
+
     if (mode == 0)
     {
         return; // Nothing to do
@@ -164,8 +203,10 @@ void Motor::tick()
     counter_intervall++;
     if (counter_intervall == motor_speed) // Time to move
     {
+        last_interaction = millis();
         digitalWrite(motor_pin_steps, lastStatus);
         counter_intervall = 0;
+
         if (lastStatus == LOW)
         {
             lastStatus = HIGH;

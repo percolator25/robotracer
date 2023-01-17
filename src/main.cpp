@@ -14,7 +14,7 @@ void receiver(WebsocketsClient &who, String where, String what)
   {
     if (what == "down")
     {
-      right.move_forwards(10);
+      right.move_forwards(100);
     }
     else
     {
@@ -25,7 +25,7 @@ void receiver(WebsocketsClient &who, String where, String what)
   {
     if (what == "down")
     {
-      right.move_backwards(10);
+      right.move_backwards(100);
     }
     else
     {
@@ -37,7 +37,7 @@ void receiver(WebsocketsClient &who, String where, String what)
   {
     if (what == "down")
     {
-      left.move_forwards(10);
+      left.move_forwards(100);
     }
     else
     {
@@ -48,7 +48,7 @@ void receiver(WebsocketsClient &who, String where, String what)
   {
     if (what == "down")
     {
-      left.move_backwards(10);
+      left.move_backwards(100);
     }
     else
     {
@@ -64,17 +64,13 @@ void setup()
 
   Web::receive(&receiver);
 
-  Wifi::development();
-
   Web::startHTTP();
   Web::startWS();
 
-  digitalWrite(D0, LOW);
-
-  left.init(1, D2, D1, false);
+  left.init(1, D2, D1, true);
   right.init(2, D3, D4, true);
 
-  Com::start(&left, &right);
+  //Com::start(&left, &right);
 
   Serial.println("Setup finished");
 
@@ -85,5 +81,5 @@ void loop()
   Web::tick();
   left.tick();
   right.tick();
-  delayMicroseconds(100);
+  delayMicroseconds(10);
 }
